@@ -1,13 +1,30 @@
 import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useTasks } from '../../store/tasks-context';
+import { scheduleReminder } from '../../services/notifications';
 
 export default function TasksScreen() {
-  const { tasks } = useTasks();
+  const { tasks, completeTask } = useTasks();
   const [filter, setFilter] = useState('Todas');
   const visibleTasks = filter === 'Pendentes' ? tasks.filter((task) => !task.completed) : tasks;
+
+  async function handleComplete(task) {
+    try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+    completeTask(task.id);
+    Alert.alert('Tarefa concluída', `Boa! Você concluiu “${task.title}”.`);
+  }
+
+  async function handleReminder(task) {
+    try {
+      const scheduled = await scheduleReminder(task.title, 10);
+      Alert.alert(scheduled ? 'Lembrete agendado' : 'Permissão necessária', scheduled ? 'Você receberá um lembrete em cerca de 10 segundos.' : 'Ative as notificações para receber lembretes.');
+    } catch {
+      Alert.alert('Não foi possível agendar', 'Tente novamente em alguns instantes.');
+    }
+  }
 
   return (
     <View style={styles.screen}>
@@ -33,12 +50,13 @@ export default function TasksScreen() {
         ListEmptyComponent={<Text style={styles.empty}>Tudo em dia por aqui ✨</Text>}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <View style={[styles.check, item.completed && styles.checked]}>
+            <Pressable onPress={() => handleComplete(item)} style={[styles.check, item.completed && styles.checked]} accessibilityLabel="Concluir tarefa">
               {item.completed && <Ionicons name="checkmark" size={15} color="#FFFFFF" />}
-            </View>
+            </Pressable>
             <View style={styles.taskCopy}>
               <Text style={[styles.taskTitle, item.completed && styles.completed]}>{item.title}</Text>
               <Link href={`/task/${item.id}`} asChild><Pressable><Text style={styles.detail}>Ver detalhes · #{item.id}</Text></Pressable></Link>
+              {!item.completed && <Pressable onPress={() => handleReminder(item)}><Text style={styles.reminder}>Lembrete em 10 s</Text></Pressable>}
             </View>
             <Ionicons name="chevron-forward" size={18} color="#A5A5B2" />
           </View>
@@ -67,5 +85,6 @@ const styles = StyleSheet.create({
   taskTitle: { color: '#252438', fontSize: 15, fontWeight: '700' },
   completed: { color: '#9B9AA7', textDecorationLine: 'line-through' },
   detail: { color: '#88879A', fontSize: 12, marginTop: 5 },
+  reminder: { color: '#6759D4', fontSize: 12, fontWeight: '700', marginTop: 9 },
   empty: { color: '#88879A', textAlign: 'center', padding: 30 },
 });
