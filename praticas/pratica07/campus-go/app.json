@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "CampusGo",
+    "slug": "campus-go",
+    "scheme": "campusgo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O CampusGo usa suas fotos para personalizar seu perfil.",
+          "cameraPermission": "O CampusGo usa a câmera para tirar sua foto de perfil."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O CampusGo usa sua localização para registrar seu check-in."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#6759D4"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "android": {
+      "package": "com.campusgo.app"
+    },
+    "ios": {
+      "bundleIdentifier": "com.campusgo.app"
+    }
+  }
+}
